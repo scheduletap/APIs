@@ -1,0 +1,212 @@
+openapi: 3.0.0
+info:
+  title: schedule
+  version: '1.0'
+  contact:
+    name: John Gray
+    url: 'https://github.com/scheduletap/APIs'
+  termsOfService: 'https://github.com/scheduletap/APIs/termsofservice.md'
+  description: Handles regular schedulering tasks
+servers:
+  - url: 'http://localhost:8000'
+    description: Primary
+paths:
+  /shift/form:
+    post:
+      summary: Creates a Shift
+      operationId: post-shift-form
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftForm'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftForm'
+        description: The shift form used to create this resource
+      description: Creates a new shift resource
+      security:
+        - mainSecurity: []
+      parameters: []
+  '/shift/{id}':
+    get:
+      summary: Get shift resource
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+              examples: {}
+        '404':
+          description: Not Found
+      operationId: get-shift
+      security:
+        - mainSecurity: []
+      parameters: []
+      description: Gets the shift resource by ID
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+  /schedule/form:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+      operationId: get-schedule
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleForm'
+        description: ''
+      security:
+        - mainSecurity: []
+    parameters: []
+components:
+  schemas:
+    Shift:
+      title: Shift
+      type: object
+      description: 'A shift represents a amount of time in which a user is working for a company '
+      properties:
+        id:
+          type: string
+        startTime:
+          type: string
+          format: time
+          description: The time the shift starts
+        finnishTime:
+          type: string
+          format: time
+          description: The time the shift finnishes
+        organisationID:
+          type: string
+          description: The organsitation this shift belongs too
+        name:
+          type: string
+          description: 'The name of this shift '
+        description:
+          type: string
+          description: The description of this shift
+      required:
+        - id
+        - startTime
+        - finnishTime
+        - organisationID
+        - name
+    ShiftForm:
+      title: ShiftForm
+      type: object
+      properties:
+        startTime:
+          type: string
+          format: time
+        finnishTime:
+          type: string
+          format: time
+        name:
+          type: string
+        description:
+          type: string
+        repeat:
+          $ref: '#/components/schemas/RepeatRule'
+      required:
+        - startTime
+        - finnishTime
+        - name
+      description: ''
+    RepeatRule:
+      title: RepeatRule
+      type: object
+      properties:
+        rule:
+          type: string
+          enum:
+            - daily
+            - weekly
+            - monthly
+            - yearly
+        repeatValue:
+          type: integer
+      required:
+        - rule
+    ScheduleDay:
+      title: ScheduleDay
+      type: object
+      description: Represents a day in a year in which each shift is assigned to a user
+      properties:
+        id:
+          type: string
+        dayOfYear:
+          type: integer
+          default: 1
+          format: int32
+          minimum: 1
+          maximum: 365
+          description: The day of the year this day reprsents between 1 and 365
+        year:
+          type: integer
+          description: The year in which this day is based
+        assignedShifts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignedShift'
+        isPublished:
+          type: boolean
+      required:
+        - id
+        - dayOfYear
+        - year
+    Schedule:
+      title: Schedule
+      type: object
+      description: Represents a unlimited amount of Scheduled days
+      properties:
+        id:
+          type: string
+        scheduleDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignedShift'
+        isDisabled:
+          type: string
+    AssignedShift:
+      title: AssignedShift
+      type: object
+      properties:
+        shift:
+          $ref: '#/components/schemas/Shift'
+        userID:
+          type: string
+      description: A Shift that has been assigned to a user
+    ScheduleForm:
+      title: ScheduleForm
+      type: object
+      description: The form used to submit a new Schedule
+      properties:
+        id:
+          type: string
+        scheduleDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignedShift'
+  securitySchemes:
+    mainSecurity:
+      type: openIdConnect
+      description: ''
